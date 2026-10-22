@@ -1,0 +1,29 @@
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Local datasets
+data/raw/*
+!data/raw/.gitkeep
+
+# Generated models
+models/*.joblib
+models/*.pkl
+
+# Generated reports and charts
+reports/model/*.png
+reports/model/*.csv
+reports/model/*.json
+reports/eda/*.png
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE and OS
+.vscode/
+.DS_Store
+Thumbs.db
