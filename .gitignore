@@ -27,3 +27,19 @@ reports/eda/*.png
 .vscode/
 .DS_Store
 Thumbs.db
+if (!(Test-Path .gitignore)) {
+    New-Item .gitignore -ItemType File
+}
+
+if (-not (Select-String -Path .gitignore -Pattern '^\s*\.env\s*$' -Quiet)) {
+    Add-Content .gitignore "`n.env"
+}
+
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]

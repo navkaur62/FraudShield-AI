@@ -6,7 +6,8 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-
+from openai import OpenAIError
+from src.investigation import generate_investigation
 
 # Locate the saved model relative to this source file.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -107,5 +108,39 @@ def predict_fraud(request: PredictionRequest):
         "model": "Random Forest",
         "disclaimer": (
             "Educational prediction only; not a final financial decision."
+        ),
+    }
+@app.post("/investigate")
+def investigate_transaction(request: PredictionRequest):
+    # Reuse the existing validation and ML prediction logic.
+    prediction = predict_fraud(request)
+
+    try:
+        investigation = generate_investigation(
+            transaction=request.transaction,
+            prediction=prediction,
+        )
+
+    except (OpenAIError, RuntimeError) as error:
+        print(
+            f"Investigation error: "
+            f"{type(error).__name__}: {error}"
+        )
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The investigation assistant is temporarily "
+                "unavailable. The ML prediction endpoint "
+                "remains available."
+            ),
+        )
+
+    return {
+        "prediction": prediction,
+        "investigation": investigation,
+        "decision_authority": "Random Forest",
+        "disclaimer": (
+            "The investigation is AI-generated and is not proof "
+            "of fraud. The ML prediction remains authoritative."
         ),
     }

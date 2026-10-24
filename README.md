@@ -1,153 +1,177 @@
-# 🛡️ FraudShield AI
+# 🛡️ FraudShieldAI
+### Intelligent Credit Card Fraud Detection & Investigation
 
-### Intelligent Online Payment Fraud Detection Using Machine Learning
+FraudShieldAI is a machine learning project that predicts potentially fraudulent credit card transactions and provides an optional AI-assisted investigation summary. It combines a Random Forest classifier with a FastAPI backend and an OpenAI-powered explanation layer.
 
-FraudShield AI is a machine learning project that identifies potentially fraudulent credit card transactions using transaction data and a Random Forest classifier. The project explores imbalanced datasets, evaluates fraud detection performance, and compares probability thresholds to balance fraud detection against false alarms.
-
-> **Project status:** Machine learning pipeline completed. API and Generative AI investigation assistant are planned next.
+The machine learning model remains the authority for predictions. The AI assistant is designed to explain the available evidence, not override the model or treat a prediction as proof of fraud.
 
 ## ✨ Features
 
-- 📊 Dataset inspection and exploratory data analysis
-- 🤖 Random Forest fraud classification
-- ⚖️ Baseline comparison using a Dummy Classifier
-- 📈 Precision, recall, F1-score, and average precision evaluation
-- 🎚️ Fraud probability threshold comparison
-- 🧾 Exportable evaluation results and charts
+- **Fraud Prediction:** Predicts whether a transaction is potentially fraudulent using a trained Random Forest model.
+- **Probability Scoring:** Returns the model's estimated fraud probability and configured decision threshold.
+- **REST API:** Exposes prediction and investigation endpoints through FastAPI.
+- **Input Validation:** Rejects missing, unexpected, or non-finite transaction feature values.
+- **AI Investigation Assistant:** Generates a structured explanation of the existing prediction when the OpenAI API is configured and available.
+- **Safe Failure Handling:** Keeps the prediction endpoint independent of AI-service availability.
+- **Automated Testing:** Tests prediction, validation, investigation errors, and mocked AI responses.
 
 ## 🧰 Tech Stack
 
-- **Language:** Python
-- **Data analysis:** Pandas, NumPy
-- **Machine learning:** Scikit-learn
-- **Visualization:** Matplotlib
-- **Model persistence:** Joblib
-- **Development:** VS Code, Git, GitHub
+| Category | Technologies |
+|---|---|
+| Language | Python |
+| Machine Learning | Scikit-learn, Random Forest |
+| Data Processing | Pandas, NumPy |
+| Model Persistence | Joblib |
+| API | FastAPI, Uvicorn |
+| Validation | Pydantic |
+| AI Integration | OpenAI Python SDK |
+| Configuration | python-dotenv |
+| Testing | Pytest |
 
-## 📁 Project Structure
+## 🏗️ Architecture
 
 ```text
-FraudShield-AI/
-├── data/
-│   ├── raw/                  # Local dataset; not committed
-│   └── processed/
-├── models/                   # Locally generated model files
-├── notebooks/
-├── reports/
-│   ├── eda/
-│   └── model/
-├── src/
-│   ├── inspect_data.py
-│   ├── eda.py
-│   ├── train_model.py
-│   └── tune_threshold.py
-├── tests/
-├── .gitignore
-└── README.md
+Transaction Input
+       |
+       v
+ FastAPI Validation
+       |
+       v
+ Random Forest Model
+       |
+       v
+ Prediction + Probability
+       |
+       +----------------------+
+       |                      |
+       v                      v
+   /predict              /investigate
+                              |
+                              v
+                     AI Explanation Layer
+                              |
+                              v
+                    Structured Investigation
 ```
 
-## 📊 Initial Model Results
-
-The Random Forest model was evaluated on a held-out test split containing 56,962 transactions, including 98 fraudulent transactions.
-
-| Metric | Random Forest |
-|---|---:|
-| Precision | 92.77% |
-| Recall | 78.57% |
-| F1-score | 85.08% |
-| Average precision | 0.8669 |
-
-### What do these results mean?
-
-- **Precision:** About 92.77% of transactions flagged as fraud were actually fraudulent.
-- **Recall:** The model detected about 78.57% of the fraudulent transactions in the test set.
-- **F1-score:** Summarizes the balance between precision and recall.
-- **Average precision:** Measures precision-recall performance across different classification thresholds.
-
-These results are from the initial model and should not be interpreted as production performance.
-
-## 🎚️ Threshold Analysis
-
-The initial threshold comparison produced these results:
-
-| Threshold | Precision | Recall | F1-score |
-|---:|---:|---:|---:|
-| 0.20 | 74.78% | 87.76% | 80.75% |
-| 0.30 | 84.00% | 85.71% | 84.85% |
-| 0.40 | 87.23% | 83.67% | 85.42% |
-| 0.50 | 92.77% | 78.57% | 85.08% |
-| 0.60 | 94.94% | 76.53% | 84.75% |
-| 0.70 | 96.10% | 75.51% | 84.57% |
-
-A lower threshold can detect more fraud but may produce more false alarms. A higher threshold tends to reduce false alarms but may miss more fraudulent transactions.
-
-The threshold of 0.40 had the highest F1-score among the thresholds tested. A final threshold should be selected using validation data before evaluating the final model on an untouched test set.
+The AI investigation layer is optional and depends on OpenAI API availability. It does not replace the Random Forest prediction.
 
 ## 🚀 Getting Started
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/navkaur62/FraudShield-AI.git
-cd FraudShield-AI
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd FraudShieldAI
 ```
 
-### 2. Create and activate a virtual environment
+Replace the placeholder with your actual GitHub repository URL.
+
+### 2. Create a virtual environment
 
 Windows PowerShell:
 
 ```powershell
-py -3.12 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
 
 ```powershell
-python -m pip install pandas numpy scikit-learn matplotlib joblib
+python -m pip install -r requirements.txt
 ```
 
-### 4. Add the dataset
+### 4. Configure environment variables
 
-Place the `creditcard.csv` dataset in:
+Create a local `.env` file if you plan to use the live AI integration:
 
-```text
-data/raw/creditcard.csv
+```dotenv
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=your_supported_model_name
 ```
 
-The dataset is not included in this repository. Obtain it from an authorized source and follow its applicable terms of use.
+Use a supported model name available to your API account. Never commit your actual API key.
 
-### 5. Inspect the data and train the model
+**Note:** Live AI investigations require an API account with available credits. Prediction and mocked AI tests can be run without purchasing API credits.
+
+### 5. Start the API
 
 ```powershell
-python .\src\inspect_data.py
-python .\src\eda.py
-python .\src\train_model.py
-python .\src\tune_threshold.py
+python -m uvicorn src.api:app --reload
 ```
 
-Generated models, reports, and charts are saved locally according to the project scripts and `.gitignore` rules.
+The API runs locally at:
 
-## 🗺️ Roadmap
+`http://127.0.0.1:8000`
 
-- [x] Dataset inspection
-- [x] Exploratory data analysis script
-- [x] Initial Random Forest model
-- [x] Baseline evaluation
-- [x] Probability threshold comparison
-- [ ] Validation-based threshold selection
-- [ ] Fraud prediction API using FastAPI
-- [ ] API testing and input validation
-- [ ] Generative AI fraud investigation assistant
-- [ ] Interactive dashboard
-- [ ] Automated tests and deployment
+Interactive API documentation:
 
-## ⚠️ Disclaimer
+`http://127.0.0.1:8000/docs`
 
-This is an educational project and is not intended to make real-world financial decisions. Model predictions can be incorrect, and any practical deployment would require additional validation, security controls, monitoring, and appropriate human oversight.
+## 🔌 API Endpoints
 
-## 👩‍💻 Author
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Basic API information |
+| GET | `/health` | Health check |
+| POST | `/predict` | Predict transaction fraud risk |
+| POST | `/investigate` | Return a prediction with an AI-generated investigation |
 
-**Navdeep Kaur**
+### Prediction Response
 
-GitHub: [@navkaur62](https://github.com/navkaur62)
+The `/predict` endpoint returns the predicted class, human-readable label, fraud probability, decision threshold, model name, and disclaimer.
+
+The request must contain the transaction features expected by the trained model.
+
+### Investigation Response
+
+The `/investigate` endpoint returns the machine learning prediction together with a structured investigation containing a summary, evidence interpretation, limitations, recommended actions, and confidence note.
+
+The investigation may return HTTP `503` if the AI service is unavailable. The `/predict` endpoint remains available independently.
+
+## 🧪 Testing
+
+Run the automated test suite:
+
+```powershell
+python -m pytest -v
+```
+
+The current test suite contains **14 passing tests** covering:
+
+- Home and health endpoints
+- Successful prediction requests
+- Missing and unexpected features
+- Preservation of the machine learning prediction
+- AI-service failure handling
+- AI response validation
+- Successful investigation using a mocked AI response
+
+Mocked AI tests do not make live OpenAI API calls.
+
+## 🔐 Responsible Use
+
+- A predicted fraudulent transaction is not proof of criminal activity.
+- Predictions should be reviewed alongside appropriate, verified evidence.
+- The AI assistant must not invent transaction details or override the model's result.
+- The model's performance depends on the training data, preprocessing, and decision threshold.
+- This project is intended for educational and demonstration purposes, not as a standalone financial decision system.
+
+## 🗺️ Future Improvements
+
+- Add model evaluation metrics and a confusion matrix.
+- Document precision, recall, and false-positive performance.
+- Add explainability tools for model features.
+- Develop a transaction monitoring dashboard.
+- Improve structured logging and API error handling.
+- Add deployment instructions and API usage examples.
+
+## 👩‍💻 Project Status
+
+The current backend has a working prediction endpoint and an optional AI investigation endpoint. The automated test suite currently passes all 14 tests. Live AI generation has not been verified successfully because the configured OpenAI API account has exhausted its credits.
+
+---
+
+**FraudShieldAI — Detect risk. Explain evidence. Support informed review.**
