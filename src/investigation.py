@@ -163,3 +163,90 @@ def generate_investigation(transaction, prediction):
             )
 
     return result
+
+
+def generate_rule_based_investigation(transaction, prediction):
+    """
+    Generate a free, local explanation of an existing ML prediction.
+
+    This function does not call an external API, run the model,
+    or change the prediction.
+    """
+
+    predicted_class = prediction["prediction"]
+    label = prediction["label"]
+    probability = prediction["fraud_probability"]
+    threshold = prediction["threshold"]
+
+    # Describe the model's result without claiming fraud is proven.
+    if predicted_class == 1:
+        summary = (
+            "The Random Forest model flagged this transaction "
+            "for further review."
+        )
+        interpretation = (
+            f"The model's fraud score is {probability:.2%}, "
+            f"which meets or exceeds the configured threshold "
+            f"of {threshold:.2%}. The result is a prediction, "
+            "not proof that fraud occurred."
+        )
+        actions = [
+            "Review the transaction using independently verified records.",
+            "Check relevant transaction history if authorized records are available.",
+            "Follow the organization's established fraud-review procedure.",
+        ]
+    else:
+        summary = (
+            "The Random Forest model classified this transaction "
+            "as legitimate under the configured threshold."
+        )
+        interpretation = (
+            f"The model's fraud score is {probability:.2%}, "
+            f"which is below the configured threshold "
+            f"of {threshold:.2%}. This classification does not "
+            "guarantee that the transaction is safe."
+        )
+        actions = [
+            "Use normal transaction-monitoring procedures.",
+            "Review additional evidence if other warning signs arise.",
+        ]
+
+    # Report known fields without inventing their significance.
+    available_fields = []
+
+    for field in ("Time", "Amount"):
+        if field in transaction:
+            available_fields.append(
+                f"{field}={transaction[field]}"
+            )
+
+    if available_fields:
+        field_note = (
+            " Available transaction fields: "
+            + ", ".join(available_fields)
+            + ". Their values alone do not establish fraud."
+        )
+    else:
+        field_note = (
+            " No interpretable transaction fields were available "
+            "for this explanation."
+        )
+
+    return {
+        "summary": summary,
+        "evidence_interpretation": interpretation + field_note,
+        "limitations": [
+            "This explanation uses predefined rules, not a generative AI model.",
+            "The prediction and score come from the Random Forest model.",
+            "Anonymized V1-V28 features have no assumed real-world meanings.",
+            "Merchant details, customer history, and other external evidence "
+            "were not independently verified.",
+            "A model prediction alone does not prove fraud or guarantee safety.",
+        ],
+        "recommended_actions": actions,
+        "confidence_note": (
+            f"The model returned a fraud score of {probability:.2%}. "
+            "This score is not independently established as a calibrated "
+            "real-world probability. Human review may be necessary."
+        ),
+    }

@@ -7,8 +7,9 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from openai import OpenAIError
-from src.investigation import generate_investigation
-
+from src.investigation import (
+    generate_rule_based_investigation as generate_investigation,
+)
 # Locate the saved model relative to this source file.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "models" / "fraud_detection_model.joblib"
@@ -140,7 +141,7 @@ def investigate_transaction(request: PredictionRequest):
         "investigation": investigation,
         "decision_authority": "Random Forest",
         "disclaimer": (
-            "The investigation is AI-generated and is not proof "
-            "of fraud. The ML prediction remains authoritative."
+             "The investigation is a rule-based explanation, not proof"
+             "of fraud.The Random Forest prediction remains authoritative." 
         ),
     }
