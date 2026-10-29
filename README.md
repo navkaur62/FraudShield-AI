@@ -1,19 +1,19 @@
-# 🛡️ FraudShieldAI
+# 🛡️ FraudShield AI
 ### Intelligent Credit Card Fraud Detection & Investigation
 
-FraudShieldAI is a machine learning project that predicts potentially fraudulent credit card transactions and provides an optional AI-assisted investigation summary. It combines a Random Forest classifier with a FastAPI backend and an OpenAI-powered explanation layer.
+**FraudShield AI** is a machine learning project that detects potentially fraudulent credit card transactions using a trained Random Forest classifier. It provides a FastAPI backend for predictions and a free, rule-based investigation assistant that explains the model's existing result.
 
-The machine learning model remains the authority for predictions. The AI assistant is designed to explain the available evidence, not override the model or treat a prediction as proof of fraud.
+The Random Forest model remains the decision authority. The investigation assistant provides context and review recommendations without changing the prediction or treating it as proof of fraud.
 
-## ✨ Features
+## ✨ Key Features
 
-- **Fraud Prediction:** Predicts whether a transaction is potentially fraudulent using a trained Random Forest model.
-- **Probability Scoring:** Returns the model's estimated fraud probability and configured decision threshold.
-- **REST API:** Exposes prediction and investigation endpoints through FastAPI.
-- **Input Validation:** Rejects missing, unexpected, or non-finite transaction feature values.
-- **AI Investigation Assistant:** Generates a structured explanation of the existing prediction when the OpenAI API is configured and available.
-- **Safe Failure Handling:** Keeps the prediction endpoint independent of AI-service availability.
-- **Automated Testing:** Tests prediction, validation, investigation errors, and mocked AI responses.
+- **Fraud Prediction:** Classifies transactions as potentially fraudulent or legitimate.
+- **Fraud Probability:** Returns the model's fraud score and configured decision threshold.
+- **REST API:** Provides prediction, health-check, and investigation endpoints through FastAPI.
+- **Input Validation:** Rejects missing features, unexpected features, and non-finite numeric values.
+- **Free Investigation Assistant:** Produces a structured explanation locally without requiring paid OpenAI API credits.
+- **Responsible Predictions:** Clearly communicates model limitations and recommends appropriate review.
+- **Automated Testing:** Includes tests for API behaviour, input validation, investigation logic, and mocked AI responses.
 
 ## 🧰 Tech Stack
 
@@ -25,57 +25,60 @@ The machine learning model remains the authority for predictions. The AI assista
 | Model Persistence | Joblib |
 | API | FastAPI, Uvicorn |
 | Validation | Pydantic |
-| AI Integration | OpenAI Python SDK |
+| Optional AI Integration | OpenAI Python SDK |
 | Configuration | python-dotenv |
 | Testing | Pytest |
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
 ```text
-Transaction Input
-       |
-       v
- FastAPI Validation
-       |
-       v
- Random Forest Model
-       |
-       v
- Prediction + Probability
-       |
-       +----------------------+
-       |                      |
-       v                      v
-   /predict              /investigate
-                              |
-                              v
-                     AI Explanation Layer
-                              |
-                              v
-                    Structured Investigation
+                 Transaction Input
+                        |
+                        v
+                 FastAPI Validation
+                        |
+                        v
+                 Random Forest Model
+                        |
+                        v
+             Prediction + Fraud Score
+                        |
+               +--------+--------+
+               |                 |
+               v                 v
+            /predict         /investigate
+                                   |
+                                   v
+                         Rule-Based Explanation
+                                   |
+                                   v
+                       Summary, Limitations,
+                      and Review Recommendations
 ```
 
-The AI investigation layer is optional and depends on OpenAI API availability. It does not replace the Random Forest prediction.
+**Design principle:** The model produces the prediction. The investigation layer explains that result and cannot override it.
 
 ## 🚀 Getting Started
 
 ### 1. Clone the repository
 
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+Replace the URL below with your actual GitHub repository URL.
+
+```powershell
+git clone YOUR_GITHUB_REPOSITORY_URL
 cd FraudShieldAI
 ```
 
-Replace the placeholder with your actual GitHub repository URL.
+### 2. Create and activate a virtual environment
 
-### 2. Create a virtual environment
-
-Windows PowerShell:
+On Windows PowerShell:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
+
+If Python is already installed and your virtual environment exists, activate the existing environment instead.
 
 ### 3. Install dependencies
 
@@ -83,18 +86,21 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Verify the trained model
 
-Create a local `.env` file if you plan to use the live AI integration:
+The API expects the trained model at:
 
-```dotenv
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=your_supported_model_name
+```text
+models/fraud_detection_model.joblib
 ```
 
-Use a supported model name available to your API account. Never commit your actual API key.
+The repository must contain this model file before you start the API. If you need to regenerate it, use the project's training script:
 
-**Note:** Live AI investigations require an API account with available credits. Prediction and mocked AI tests can be run without purchasing API credits.
+```powershell
+python -m src.train_model
+```
+
+Run this only if the training script supports module execution in your current project setup; otherwise, use the project's documented script path.
 
 ### 5. Start the API
 
@@ -102,76 +108,141 @@ Use a supported model name available to your API account. Never commit your actu
 python -m uvicorn src.api:app --reload
 ```
 
-The API runs locally at:
+Open the following URLs in your browser:
 
-`http://127.0.0.1:8000`
+- API base URL: http://127.0.0.1:8000/
+- Health check: http://127.0.0.1:8000/health
+- Interactive API documentation: http://127.0.0.1:8000/docs
 
-Interactive API documentation:
-
-`http://127.0.0.1:8000/docs`
+The free rule-based investigation endpoint does not require OpenAI API credits.
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint | Purpose |
+| Method | Endpoint | Description |
 |---|---|---|
-| GET | `/` | Basic API information |
-| GET | `/health` | Health check |
-| POST | `/predict` | Predict transaction fraud risk |
-| POST | `/investigate` | Return a prediction with an AI-generated investigation |
+| GET | `/` | Displays basic API information |
+| GET | `/health` | Reports API and model status |
+| POST | `/predict` | Predicts the transaction's fraud class and score |
+| POST | `/investigate` | Returns the prediction with a structured explanation |
+
+### Example Request
+
+The model expects every feature included in its trained feature list. The example below is illustrative; it is not a known fraudulent or legitimate real-world transaction.
+
+```json
+{
+  "transaction": {
+    "Time": 0.0,
+    "V1": 0.0,
+    "V2": 0.0,
+    "V3": 0.0,
+    "V4": 0.0,
+    "V5": 0.0,
+    "V6": 0.0,
+    "V7": 0.0,
+    "V8": 0.0,
+    "V9": 0.0,
+    "V10": 0.0,
+    "V11": 0.0,
+    "V12": 0.0,
+    "V13": 0.0,
+    "V14": 0.0,
+    "V15": 0.0,
+    "V16": 0.0,
+    "V17": 0.0,
+    "V18": 0.0,
+    "V19": 0.0,
+    "V20": 0.0,
+    "V21": 0.0,
+    "V22": 0.0,
+    "V23": 0.0,
+    "V24": 0.0,
+    "V25": 0.0,
+    "V26": 0.0,
+    "V27": 0.0,
+    "V28": 0.0,
+    "Amount": 0.0
+  }
+}
+```
+
+Send this JSON to either endpoint using `POST`:
+
+- `/predict`
+- `/investigate`
+
+You can try both endpoints through the interactive Swagger UI at `/docs`.
 
 ### Prediction Response
 
-The `/predict` endpoint returns the predicted class, human-readable label, fraud probability, decision threshold, model name, and disclaimer.
+The `/predict` endpoint returns:
 
-The request must contain the transaction features expected by the trained model.
+- Predicted class and human-readable label
+- Fraud probability score
+- Configured threshold
+- Model name
+- Educational-use disclaimer
 
 ### Investigation Response
 
-The `/investigate` endpoint returns the machine learning prediction together with a structured investigation containing a summary, evidence interpretation, limitations, recommended actions, and confidence note.
+The `/investigate` endpoint returns the model prediction together with:
 
-The investigation may return HTTP `503` if the AI service is unavailable. The `/predict` endpoint remains available independently.
+- Investigation summary
+- Interpretation of the available transaction fields and score
+- Limitations
+- Recommended review actions
+- Confidence note
+
+The explanation is rule-based and does not require a live generative AI service. An anonymized feature such as `V1` or `V2` is not assigned an invented real-world meaning.
 
 ## 🧪 Testing
 
-Run the automated test suite:
+Run the complete test suite:
 
 ```powershell
 python -m pytest -v
 ```
 
-The current test suite contains **14 passing tests** covering:
+**Latest verified result: 18 tests passed.**
+
+The tests cover:
 
 - Home and health endpoints
-- Successful prediction requests
-- Missing and unexpected features
-- Preservation of the machine learning prediction
-- AI-service failure handling
-- AI response validation
-- Successful investigation using a mocked AI response
+- Successful fraud predictions
+- Missing and unexpected feature validation
+- Investigation behaviour and preservation of the model prediction
+- Investigation error handling
+- Validation of mocked AI responses
+- Rule-based investigation recommendations and limitations
+- End-to-end `/investigate` endpoint behaviour without OpenAI credits
 
-Mocked AI tests do not make live OpenAI API calls.
+Run the tests again after making code changes to confirm the result remains current.
 
-## 🔐 Responsible Use
+## 🔐 Responsible Use and Limitations
 
 - A predicted fraudulent transaction is not proof of criminal activity.
-- Predictions should be reviewed alongside appropriate, verified evidence.
-- The AI assistant must not invent transaction details or override the model's result.
-- The model's performance depends on the training data, preprocessing, and decision threshold.
-- This project is intended for educational and demonstration purposes, not as a standalone financial decision system.
+- A legitimate classification does not guarantee that a transaction is safe.
+- The model's fraud score is not necessarily a calibrated real-world probability.
+- The anonymized `V1`–`V28` features are not given assumed real-world meanings.
+- The rule-based investigation is an explanation, not an independent fraud investigation.
+- The model's performance depends on its training data, preprocessing, and decision threshold.
+- This project is intended for education and demonstration, not as a standalone financial decision system.
 
 ## 🗺️ Future Improvements
 
-- Add model evaluation metrics and a confusion matrix.
-- Document precision, recall, and false-positive performance.
-- Add explainability tools for model features.
-- Develop a transaction monitoring dashboard.
-- Improve structured logging and API error handling.
-- Add deployment instructions and API usage examples.
+- Add a confusion matrix and documented precision, recall, and false-positive metrics.
+- Add model explainability using suitable feature-attribution methods.
+- Build a transaction monitoring dashboard.
+- Add structured logging and improve operational error handling.
+- Add deployment instructions and a hosted API demonstration.
+- Evaluate the model on additional data and validate its probability calibration.
 
 ## 👩‍💻 Project Status
 
-The current backend has a working prediction endpoint and an optional AI investigation endpoint. The automated test suite currently passes all 14 tests. Live AI generation has not been verified successfully because the configured OpenAI API account has exhausted its credits.
+The project includes a trained Random Forest model, a FastAPI prediction service, a free rule-based investigation endpoint, and an automated test suite with **18 passing tests in the latest reported run**.
+
+Live generative AI investigation remains optional and is not required for the current rule-based workflow.
 
 ---
 
-**FraudShieldAI — Detect risk. Explain evidence. Support informed review.**
+**FraudShield AI — Detect risk. Explain evidence. Support informed review.**
