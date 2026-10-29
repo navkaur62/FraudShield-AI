@@ -141,7 +141,8 @@ def investigate_transaction(request: PredictionRequest):
         "investigation": investigation,
         "decision_authority": "Random Forest",
         "disclaimer": (
-             "The investigation is a rule-based explanation, not proof"
-             "of fraud.The Random Forest prediction remains authoritative." 
+                "The investigation is a rule-based explanation, not proof "
+                "of fraud. The Random Forest prediction remains authoritative."
         ),
+  
     }
