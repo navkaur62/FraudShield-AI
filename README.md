@@ -65,8 +65,8 @@ The Random Forest model remains the decision authority. The investigation assist
 Replace the URL below with your actual GitHub repository URL.
 
 ```powershell
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd FraudShieldAI
+git clone https://github.com/navkaur62/FraudShield-AI.git
+cd FraudShield-AI
 ```
 
 ### 2. Create and activate a virtual environment
@@ -97,10 +97,8 @@ models/fraud_detection_model.joblib
 The repository must contain this model file before you start the API. If you need to regenerate it, use the project's training script:
 
 ```powershell
-python -m src.train_model
+python .\src\train_model.py
 ```
-
-Run this only if the training script supports module execution in your current project setup; otherwise, use the project's documented script path.
 
 ### 5. Start the API
 
@@ -228,9 +226,27 @@ Run the tests again after making code changes to confirm the result remains curr
 - The model's performance depends on its training data, preprocessing, and decision threshold.
 - This project is intended for education and demonstration, not as a standalone financial decision system.
 
+
+## 📊 Model Performance
+
+The Random Forest classifier was evaluated on a stratified test split of the credit card transaction dataset.
+
+| Metric | Test Result |
+|---|---:|
+| Precision | 92.77% |
+| Recall | 78.57% |
+| F1 Score | 85.08% |
+| Average Precision | 86.69% |
+| Decision Threshold | 0.50 |
+
+**Interpretation:** At the configured threshold, the model identifies a substantial proportion of fraudulent transactions while maintaining high precision. However, some fraudulent transactions may be missed.
+
+These results apply to the reported test split and do not guarantee equivalent performance on new or real-world transactions.
+
+Confusion matrices and additional evaluation reports are available in `reports/model/` when those files are included in the repository.
+
 ## 🗺️ Future Improvements
 
-- Add a confusion matrix and documented precision, recall, and false-positive metrics.
 - Add model explainability using suitable feature-attribution methods.
 - Build a transaction monitoring dashboard.
 - Add structured logging and improve operational error handling.
